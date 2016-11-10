@@ -1,25 +1,68 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import os
-import read_output2 as readpy
 
 #exec(open("./make_one_plot_only.py").read())
 
+
+def read_out(fname, search_strings, column):        #read .out datafile
+    zvalue = 0
+    f1 = open(fname)
+    f2 = open(fname)
+    
+    for line in f1:                                 #get the z0 or z1 value
+        if '&geometry' in line:
+            f1.readline()
+            temp = f1.readline()
+            data = temp.split()
+    if column == 0:
+        zvalue = data[-4]
+    if column == 1:
+        zvalue = data[-1]
+
+    if 'semi' in f2.name:                           #get mean value if semi file
+        for secline in f2:
+            if 'Yield' in secline:
+                asd = f2.readlines()[0:36]
+                q = asd[35]
+                r = q.split()
+                print('the mean value of Backscattered stuff is: ' + r[6])
+
+    if '_0_1' in f2.name:                           #get mean value if 0_1 file
+        for secline in f2:
+            if 'Yield' in secline:
+                asd = f2.readlines()[0:51]           #read 51 lines, and save the last
+                q = asd[50]
+                r = q.split()
+                print('the mean value of Transmitted stuff is: ' + r[6])
+                
+    return zvalue, r[6]                      #return the z value and the mean
+
+
+def read_his(fname, column = 1):                    #read .hise datafile
+    z, f_end = [], []
+    f1 = open(fname)
+    print(f1.name)
+    line = f1.readline()
+    line = f1.readline()
+    for line in f1:
+        temp = line.strip()
+        first = temp[0:temp.find(' ')]
+        second = temp[temp.rfind(' '):]             #leaves a ' ' at the beginnning
+        second = second.strip()
+
+        z.append(first)
+        f_end.append(second)
+    f1.close()
+    return (z, f_end)                               #return the z and f value
+
+
 def get_zero_line(z0, z1, hisez):                   #get the indices where Z is 0
     temp_first = z0 - hisez
-    if 0 in temp_first:
-        asd_first = np.nonzero(temp_first == 0.)[0][0]          #returns the index of the 0-valued element 
-    else:
-        print('No 0 in temp_first')
-        return(0, 0)                #HEEEEEEEEEEEEY WHY NOT NONE NONE
+    asd_first = np.nonzero(temp_first == 0.)[0][0]          #returns the index of the 0-valued element 
     temp_last = z1 - hisez
-    if 0 in temp_last:
-        
-        asd_last = np.nonzero(temp_last == 0.)[0][0]          #returns the index of the 0-valued element
-        return(asd_first, asd_last)
-    else:
-        print('No 0 in temp_last')
-        return(asd_first, 0)
+    asd_last = np.nonzero(temp_last == 0.)[0][0]          #returns the index of the 0-valued element
+    return(asd_first, asd_last)
 
 
 def mittlerwerte_start(start, hisez, hisef):
@@ -36,76 +79,41 @@ def mittlerwerte_end(end, hisez, hisef):
     return (temp0, temp1)
 
     
-outfiles = readpy.out_file_paths
-hisefiles = readpy.hise_file_paths
+    
 
-#print(outfiles)
-#print(hisefiles)
-savethis = open('save.txt', 'a')
-#savethis.write(str(result_mean0 / newy_right) + '\n')
-
-'''
 file = '/IMSIL_output/ar2/ar2_0_1.hise'         #open 1 .hise file for testing
 path = os.getcwd() + file
-(z, f) = readpy.read_his(path)
+(z, f) = read_his(path)
 result_z = np.array(z, dtype = float)               #array of z and F(z) values from hise
 result_f = np.array(f, dtype = float)
+#print(result_z)
+#print(result_f)
 
 file_out = '/IMSIL_output/ar2/ar2_0_1.out'      #open 1 .out file for testing
 path_out = os.getcwd() + file_out
-(out0, mean0) = readpy.read_out(path_out, ' ', 0)                   
-(out1, mean1) = readpy.read_out(path_out, ' ', 1)
+(out0, mean0) = read_out(path_out, ' ', 0)                   
+(out1, mean1) = read_out(path_out, ' ', 1)
 result_out0 = float(out0)                           #z and mean values from out
 result_out1 = float(out1)
 result_mean0 = float(mean0)
 result_mean1 = float(mean1)
-'''
-storage = []
+print('out0,\t out1, \t mean0,\t mean1')
+print (str(result_out0) + '\t' + str(result_out1) + '\t' + str(result_mean0) + '\t' + str(result_mean1))
 
-for x,y in zip(hisefiles, outfiles):
-    
-    path_hise = x    
-    #path_hise = os.getcwd() + '\\IMSIL_output\\' + file_hise
-    (z, f) = readpy.read_his(path_hise)
-    result_z = np.array(z, dtype = float)               #array of z and F(z) values from hise
-    result_f = np.array(f, dtype = float)
-    
-    path_out = y
-    #path_out = os.getcwd() + file_out
-    (out0, mean0) = readpy.read_out(path_out, ' ', 0)                   
-    (out1, mean1) = readpy.read_out(path_out, ' ', 1)
-    result_out0 = float(out0)                           #z and mean values from out
-    result_out1 = float(out1)
-    result_mean0 = float(mean0)
-    result_mean1 = float(mean1)
-    
-    
-    (intsec1, intsec2) = get_zero_line(result_out0, result_out1, result_z)  #indeces where val is 0
-
-    (start0, start1) = mittlerwerte_start(intsec1, result_z, result_f)      #x-values of 2 left points
-    deltay_left =  result_f[intsec1 + 3] - result_f[intsec1 + 2]             #diff of y-vals of 2 left points
-    newy_left = result_f[intsec1 + 2] - (deltay_left/2)                       #calc the y-val at intersection
-
-    (end0, end1) = mittlerwerte_end(intsec2, result_z, result_f)            #x-values of 2 right points
-    deltay_right = result_f[intsec2 - 2] - result_f[intsec2 - 1]        #diff of y-vals of 2 right points
-    newy_right = result_f[intsec2 - 1] - (deltay_right/2)                   #calc the y-val at intersec.
-    
-    storage.append(result_mean0 / newy_right)
-    
-print(storage)
-'''
 (intsec1, intsec2) = get_zero_line(result_out0, result_out1, result_z)  #indeces where val is 0
+#print('Index of 0val: ' + str(intsec1) , str(intsec2))
 
 (start0, start1) = mittlerwerte_start(intsec1, result_z, result_f)      #x-values of 2 left points
+#print('start0=' + str(start0) + ' start1=' + str(start1))
 deltay_left =  result_f[intsec1 + 3] - result_f[intsec1 + 2]             #diff of y-vals of 2 left points
 newy_left = result_f[intsec1 + 2] - (deltay_left/2)                       #calc the y-val at intersection
+#print('deltay_left=' + str(deltay_left) + ' newy_left=' + str(newy_left))
 
 (end0, end1) = mittlerwerte_end(intsec2, result_z, result_f)            #x-values of 2 right points
 deltay_right = result_f[intsec2 - 2] - result_f[intsec2 - 1]        #diff of y-vals of 2 right points
 newy_right = result_f[intsec2 - 1] - (deltay_right/2)                   #calc the y-val at intersec.
-'''
-
-
+#print( result_f[intsec2 - 2],  result_f[intsec2 - 1], intsec2 - 3)
+#print('deltay_right=' + str(deltay_right) + ' newy_right=' + str(newy_right))
 
 fig = plt.figure()
 expo = fig.add_subplot(111)
