@@ -1,9 +1,43 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import os
-import read_output2 as readpy
+
 
 #exec(open("./make_one_plot_only.py").read())
+
+def read_out(fname, search_strings, column):        #read .out datafile
+    f1 = open(fname)
+    for line in f1:
+        if '&geometry' in line:
+            f1.readline()
+            temp = f1.readline()
+            data = temp.split()
+            #print (line)
+            #print (temp)
+            #print (data)
+            #print(data[-1])
+    if column == 0:
+       return data[-4]
+    if column == 1:
+        return data[-1]
+    return None
+    
+def read_his(fname, column = 1):                    #read .hise datafile
+    z, f_end = [], []
+    f1 = open(fname)
+    print(f1.name)
+    line = f1.readline()
+    line = f1.readline()
+    for line in f1:
+        temp = line.strip()
+        first = temp[0:temp.find(' ')]
+        second = temp[temp.rfind(' '):]             #leaves a ' ' at the beginnning
+        second = second.strip()
+
+        z.append(first)
+        f_end.append(second)
+    f1.close()
+    return (z, f_end)
 
 def get_zero_line(z0, z1, hisez):                   #get the indices where Z is 0
     temp_first = z0 - hisez
@@ -20,90 +54,67 @@ def get_zero_line(z0, z1, hisez):                   #get the indices where Z is 
     else:
         print('No 0 in temp_last')
         return(asd_first, 0)
-
-
+    
 def mittlerwerte_start(start, hisez, hisef):
     #start: result of get_zero_line
+    print('topkek')
+    print(hisez[start], hisez[start + 2])
+    print(hisef[start], hisef[start + 2])
     temp0 = (hisez[start] + hisez[start + 2]) / 2
+    
+    print(hisez[start + 2], hisez[start + 4])
+    print(hisef[start + 2], hisef[start + 4])
     temp1 = (hisez[start + 2] + hisez[start + 4]) / 2
     return (temp0, temp1)
-
-
+    
 def mittlerwerte_end(end, hisez, hisef):
     #end : result of get_zero_line
+    print('topkek')
+    print(hisez[end - 2], hisez[end])
+    print(hisef[end - 2], hisef[end])
     temp0 = (hisez[end - 2] + hisez[end]) / 2
+    
+    print(hisez[end - 4], hisez[end - 2])
+    print(hisef[end - 4], hisef[end - 2])
     temp1 = (hisez[end - 4] + hisez[end - 2]) / 2
     return (temp0, temp1)
 
-    
-outfiles = readpy.out_file_paths
-hisefiles = readpy.hise_file_paths
-
-#print(outfiles)
-#print(hisefiles)
-savethis = open('save.txt', 'a')
-#savethis.write(str(result_mean0 / newy_right) + '\n')
-
-'''
 file = '/IMSIL_output/ar2/ar2_0_1.hise'         #open 1 .hise file for testing
 path = os.getcwd() + file
-(z, f) = readpy.read_his(path)
-result_z = np.array(z, dtype = float)               #array of z and F(z) values from hise
+(z, f) = read_his(path)
+result_z = np.array(z, dtype = float)
 result_f = np.array(f, dtype = float)
+print(result_z)
+print(result_f)
 
 file_out = '/IMSIL_output/ar2/ar2_0_1.out'      #open 1 .out file for testing
 path_out = os.getcwd() + file_out
-(out0, mean0) = readpy.read_out(path_out, ' ', 0)                   
-(out1, mean1) = readpy.read_out(path_out, ' ', 1)
-result_out0 = float(out0)                           #z and mean values from out
+out0 = read_out(path_out, ' ', 0)
+out1 = read_out(path_out, ' ', 1)
+
+result_out0 = float(out0)
 result_out1 = float(out1)
-result_mean0 = float(mean0)
-result_mean1 = float(mean1)
-'''
-storage = []
+print (result_out0, result_out1)
+# 6=10, 7=11 at indeces also the 2 F values after our given z
 
-for x,y in zip(hisefiles, outfiles):
-    
-    path_hise = x    
-    #path_hise = os.getcwd() + '\\IMSIL_output\\' + file_hise
-    (z, f) = readpy.read_his(path_hise)
-    result_z = np.array(z, dtype = float)               #array of z and F(z) values from hise
-    result_f = np.array(f, dtype = float)
-    
-    path_out = y
-    #path_out = os.getcwd() + file_out
-    (out0, mean0) = readpy.read_out(path_out, ' ', 0)                   
-    (out1, mean1) = readpy.read_out(path_out, ' ', 1)
-    result_out0 = float(out0)                           #z and mean values from out
-    result_out1 = float(out1)
-    result_mean0 = float(mean0)
-    result_mean1 = float(mean1)
-    
-    
-    (intsec1, intsec2) = get_zero_line(result_out0, result_out1, result_z)  #indeces where val is 0
 
-    (start0, start1) = mittlerwerte_start(intsec1, result_z, result_f)      #x-values of 2 left points
-    deltay_left =  result_f[intsec1 + 3] - result_f[intsec1 + 2]             #diff of y-vals of 2 left points
-    newy_left = result_f[intsec1 + 2] - (deltay_left/2)                       #calc the y-val at intersection
 
-    (end0, end1) = mittlerwerte_end(intsec2, result_z, result_f)            #x-values of 2 right points
-    deltay_right = result_f[intsec2 - 2] - result_f[intsec2 - 1]        #diff of y-vals of 2 right points
-    newy_right = result_f[intsec2 - 1] - (deltay_right/2)                   #calc the y-val at intersec.
-    
-    storage.append(result_mean0 / newy_right)
-    
-print(storage)
-'''
-(intsec1, intsec2) = get_zero_line(result_out0, result_out1, result_z)  #indeces where val is 0
+(intsec1, intsec2) = get_zero_line(result_out0, result_out1, result_z)
+print('Index of 0val: ' + str(intsec1) , str(intsec2))
 
-(start0, start1) = mittlerwerte_start(intsec1, result_z, result_f)      #x-values of 2 left points
-deltay_left =  result_f[intsec1 + 3] - result_f[intsec1 + 2]             #diff of y-vals of 2 left points
-newy_left = result_f[intsec1 + 2] - (deltay_left/2)                       #calc the y-val at intersection
+(start0, start1) = mittlerwerte_start(intsec1, result_z, result_f)        #TO GET THE POINTS + LINE
+deltay =  result_f[intsec1 + 3] - result_f[intsec1 + 2]           #5.563111E+08 - 6.622265E+08 umgekehrt
+newy = result_f[intsec1 + 2] - (deltay/2)
+print('deltay=' + str(deltay) + ' newy=' + str(newy))
 
-(end0, end1) = mittlerwerte_end(intsec2, result_z, result_f)            #x-values of 2 right points
-deltay_right = result_f[intsec2 - 2] - result_f[intsec2 - 1]        #diff of y-vals of 2 right points
-newy_right = result_f[intsec2 - 1] - (deltay_right/2)                   #calc the y-val at intersec.
-'''
+(end0, end1) = mittlerwerte_end(intsec2, result_z, result_f)    #get the x-values
+kappay = result_f[intsec2 - 2] - result_f[intsec2 - 1]
+wevy = result_f[intsec2 - 1] - (kappay/2)
+#print( result_f[intsec2 - 3],  result_f[intsec2 - 2], intsec2 - 3)
+print('kappay=' + str(kappay) + ' wevy=' + str(wevy))
+
+
+
 
 
 
@@ -112,28 +123,18 @@ expo = fig.add_subplot(111)
 something = expo.plot(result_z, result_f, 'r+-', label = 'z[n] / F[n]', color = 'blue')
 expo.axvline(x=result_out0, label = 'z0', color = 'black')              #z from out
 expo.axvline(x=result_out1, label = 'z1', color = 'black')      
-                        #POINTS + THE LINE AT START START
-expo.plot(start0, result_f[intsec1 + 2], 'go')                         
-expo.plot(start1, result_f[intsec1 + 3], 'go')
-expo.plot(result_out0, newy_left, 'ro')                #HIDE YO KIDS, HODE YO HAXXES
-expo.plot([start0, start1, result_out0], [result_f[intsec1 + 2], result_f[intsec1 + 3], newy_left],
-                    color = 'green')
-                        #POINTS + THE LINE AT START END
-                        #POINTS + THE LINE AT END START
-expo.plot(end0, result_f[intsec2 - 1], 'go')                        
-expo.plot(end1, result_f[intsec2 - 2], 'go')
-expo.plot(result_out1, newy_right, 'ro')                #HIDE YO KIDS, HODE YO HAXXES
-expo.plot([result_out1, end0, end1], [newy_right, result_f[intsec2 - 1], result_f[intsec2 - 2]],
-                    color = 'green')
-                        #POINTS + THE LINE AT END END
 
-print('Acquired values are: [' + str(result_out0) + '\t,' + str(newy_left) + '] on left')
-print('                     [' + str(result_out1) + '\t,' + str(newy_right) + '] on right')
-'''
-savethis = open('save.txt', 'a')
-savethis.write(str(result_mean0 / newy_right) + '\n')
-savethis.close()
-'''                    
+expo.plot(start0, result_f[intsec1 + 2], 'ro')                         #Points at start
+expo.plot(start1, result_f[intsec1 + 3], 'ro')
+#expo.plot(start1, result_f[intsec1 + 3], 'ro')             #REMOVE, prolly duplicate somehow
+expo.plot(result_out0, newy, 'bo')                #HIDE YO KIDS, HODE YO HAXXES
+expo.plot([start0, start1, result_out0], [result_f[intsec1 + 2], result_f[intsec1 + 3], newy], color = 'green')
+
+expo.plot(end0, result_f[intsec2 - 1], 'ro')                         #Points at end
+expo.plot(end1, result_f[intsec2 - 2], 'ro')
+expo.plot(result_out1, wevy, 'bo')                #HIDE YO KIDS, HODE YO HAXXES
+expo.plot([result_out1, end0, end1], [wevy, result_f[intsec2 - 1], result_f[intsec2 - 2]], color = 'green')
+
 expo.set_title('Extrapolate')
 expo.legend()
 plt.show()

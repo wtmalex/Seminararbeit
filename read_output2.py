@@ -1,36 +1,35 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy import interpolate
 import os
 
-def hiseFileList():
+def hiseFileList():            #get the list of .hise files
     temp = []
     filePaths = []
     for path, subdirs, files in os.walk('C:'):
         for name in files:
             if name.endswith('.hise'):
-                if '_0_1' in name or '_0_semi' in name:     # _0_1 instead of 0_1 to prevent ...
-                    temp.append(name)                       # 20_1 for example
+                if '_0_1' in name or '_0_semi' in name:     # _0_1 instead of 0_1 to prevent
+                    temp.append(name)                       #             20_1 for example
                     filePaths.append(os.path.join(path, name))
     return (temp, filePaths)
 
 
-def outFileList():
+def outFileList():            #get the list of .out files
     temp = []
     filePaths = []
     for path, subdirs, files in os.walk('C:'):
         for name in files:
             if name.endswith('.out'):
-                if '_0_1' in name or '_0_semi' in name:     # _0_1 instead of 0_1 to prevent ...
-                    temp.append(name)                       # 20_1 for example
+                if '_0_1' in name or '_0_semi' in name:     # _0_1 instead of 0_1 to prevent
+                    temp.append(name)                       #             20_1 for example
                     filePaths.append(os.path.join(path, name))
     return (temp, filePaths)
 
 
 def read_out(fname, search_strings, column):        #read .out datafile
     zvalue = 0
-    f1 = open(fname)
-    f2 = open(fname)
+    f1 = open(fname)                                #2 filepointers, 1 to get z from geometry
+    f2 = open(fname)                                #   and 1 to get the mean value
     
     for line in f1:                                 #get the z0 or z1 value
         if '&geometry' in line:
@@ -50,7 +49,7 @@ def read_out(fname, search_strings, column):        #read .out datafile
                 r = q.split()
                 print('the mean value of Backscattered stuff is: ' + r[6])
 
-    if '_0_1' in f2.name:                           #get mean value if 0_1 file
+    if '_0_1' in f2.name:                           #get mean value if _0_1 file
         for secline in f2:
             if 'Yield' in secline:
                 asd = f2.readlines()[0:51]           #read 51 lines, and save the last
@@ -81,55 +80,9 @@ def read_his(fname, column = 1):                    #read .hise datafile
     return (z, f_end)                               #return the z and f value
 
 
-
-'''
-def extrap1d(interpolator):
-    xs = interpolator.x
-    ys = interpolator.y
-    
-    def pointwise(x):
-        if x < xs[0]:
-            return ys[0] + (x-xs[0]) * (ys[1]-ys[0]) / (xs[1]-xs[0])
-        elif x > xs[-1]:
-            return ys[-1] + (x-xs[-1]) * (ys[-1]-ys[-2]) / (xs[-1]-xs[-2])
-        else:
-            return interpolator(x)
-            
-    def ufunclike(xs):
-        return array(map(pointwise, array(xs)))
-    
-    return ufunclike
-'''
-(hise_files, hise_file_paths) = hiseFileList() #get all .hise files and their path
-#print (hise_files)
-#print(hise_file_paths)
+(hise_files, hise_file_paths) = hiseFileList() 
 
 (out_files, out_file_paths) = outFileList()
-#print(out_files)
-#print(out_file_paths)
-
-'''
-plt.title('test')
-plt.plot(result_z, result_f, 'r+-', label = 'test')
-plt.legend()
-plt.show()
-'''
-
-
-'''
-a = [2,3,4,5,6]       #FOR TESTING THE LABELS AND TICKS
-b = [3,4,5,6,8]
-
-my_x = ['', 'He', 'Ar', 'Xe', ' '] # '' at begin and end for formalities
-plt.xticks(a, my_x)
-plt.xlabel('Ion Species')
-plt.ylabel('Sputtering Efficiency Y/F$_1$$_D$ [Å/eV]')
-plt.title('Sputtering of Si, tilt=0°')
-
-plt.plot(a,b, label= 'kek')
-plt.legend()                        #little square at top right
-plt.show()          #END OF TESTING
-'''
 
 
 
