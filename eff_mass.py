@@ -71,7 +71,7 @@ for x,y in zip(hisefiles_0_1, outfiles_0_1):
     result_f = np.array(f, dtype = float)
     
     path_out = y
-    (out1, mean1) = readpy.read_out(path_out, ' ', 1)   #note: prints mean value
+    (out1, mean1) = readpy.read_out(path_out, ('0_1', 'Transmitted'), 2)   #note: prints mean value
     result_out1 = float(out1)                           #the z_1 value and mean of Transmitted
     result_mean1 = float(mean1)
 
@@ -81,7 +81,6 @@ for x,y in zip(hisefiles_0_1, outfiles_0_1):
     newy_right = result_f[intsec - 1] - (deltay_right/2)                   #calc the y-val at intersec.
     
     storageb.append((result_mean1 / newy_right) * 100000000)        #from cm to Å
-    print('\n')
 
 ###############################################################################################
 ###################### Saving the values from semi files (Rueckwaerts) ######################## 
@@ -93,7 +92,7 @@ for x,y in zip(hisefiles_semi, outfiles_semi):
     result_f = np.array(f, dtype = float)
     
     path_out = y
-    (out0, mean0) = readpy.read_out(path_out, ' ', 0)                   
+    (out0, mean0) = readpy.read_out(path_out, ('semi', 'Backscattered'), 2)                   
     result_out0 = float(out0)                           #the z_0 value and mean of Backscattered
     result_mean0 = float(mean0)
 
@@ -103,7 +102,6 @@ for x,y in zip(hisefiles_semi, outfiles_semi):
     newy_left = result_f[intsec + 2] - (deltay_left/2)                       #calc the y-val at intersec.
     
     storagev.append((result_mean0 / newy_left) * 100000000)         #from cm to Å
-    print('\n')
 
 
 print(storageb)
